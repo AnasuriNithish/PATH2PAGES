@@ -1,0 +1,60 @@
+// App.js
+import React from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
+
+import Home from "./components/Home";
+import Shop from "./components/Shop";
+import Cart from "./components/Cart";
+import Checkout from "./components/Checkout";
+import AuthPage from "./components/AuthPage";
+import Myaccount from "./components/Myaccount";
+import Journal from "./components/Journal";
+import Bookmark from "./components/Bookmark";
+
+function App() {
+  return (
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/shop" element={<Shop />} />
+          <Route path="/journal" element={<Journal />} />
+          <Route path="/bookmark" element={<Bookmark />} />
+          <Route path="/cart" element={<Cart />} />
+
+          {/* Auth */}
+          <Route path="/auth" element={<AuthPage />} />
+
+          {/* Protected */}
+          <Route
+            path="/checkout"
+            element={
+              <ProtectedRoute>
+                <Checkout />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Myaccount />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
+  );
+}
+
+export default App;
