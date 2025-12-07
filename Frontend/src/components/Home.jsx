@@ -1,177 +1,33 @@
-// Home.jsx (scanned and annotated — unused items are commented inline)
-// Source file: :contentReference[oaicite:1]{index=1}
+// Home.jsx (Minimalist + Themed Navbar from Photo)
+// :contentReference[oaicite:1]{index=1}
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { FaWhatsapp, FaInstagram } from "react-icons/fa";
 import { SiThreads } from "react-icons/si";
-// eslint-disable-next-line no-unused-vars
-import { Link, useLocation, useNavigate } from "react-router-dom"; // <- useLocation is NOT used, useNavigate is declared but NOT used below
-import { getImageBaseURL } from "../services/api_service"; // <- Imported but the resulting BASE_URL is not used below
+import { ShoppingCart } from "lucide-react";
 
 const Home = () => {
-  const navbarRef = useRef(null);
-  const hasAnimated = useRef(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-  // eslint-disable-next-line no-unused-vars
-  const navigate = useNavigate(); // UNUSED: navigate is declared but never used in this file
-  // eslint-disable-next-line no-unused-vars
-  const BASE_URL = getImageBaseURL(); // UNUSED: BASE_URL is assigned but not used anywhere
-
-  // GSAP + Anime.js animations
-  useEffect(() => {
-    const scripts = [
-      "https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js",
-      "https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js",
-      "https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js",
-    ];
-    let scriptsLoaded = 0;
-
-    scripts.forEach((src) => {
-      if (document.querySelector(`script[src="${src}"]`)) {
-        scriptsLoaded++;
-        if (scriptsLoaded === scripts.length) initAnimations();
-        return;
-      }
-      const script = document.createElement("script");
-      script.src = src;
-      script.async = true;
-      script.onload = () => {
-        scriptsLoaded++;
-        if (scriptsLoaded === scripts.length) initAnimations();
-      };
-      document.body.appendChild(script);
-    });
-
-    function initAnimations() {
-      if (
-        hasAnimated.current ||
-        !window.gsap ||
-        !window.anime ||
-        !window.gsap.registerPlugin
-      )
-        return;
-      hasAnimated.current = true;
-
-      window.gsap.registerPlugin(window.ScrollTrigger);
-
-      window.gsap.from(navbarRef.current, {
-        y: -100,
-        opacity: 0,
-        duration: 1,
-        ease: "power3.out",
-      });
-
-      const textWrapper = document.querySelector(".hero-title");
-      if (textWrapper && !textWrapper.querySelector(".letter")) {
-        textWrapper.innerHTML = textWrapper.textContent.replace(
-          /\S/g,
-          "<span class='letter'>$&</span>"
-        );
-
-        window.anime.timeline({ loop: false }).add({
-          targets: ".hero-title .letter",
-          translateY: [-100, 0],
-          opacity: [0, 1],
-          easing: "easeOutExpo",
-          duration: 1400,
-          delay: (el, i) => 30 * i,
-        });
-      }
-
-      window.gsap.utils.toArray(".animated-text").forEach((el) => {
-        window.gsap.from(el, {
-          scrollTrigger: {
-            trigger: el,
-            start: "top 85%",
-            toggleActions: "play none none none",
-          },
-          y: 30,
-          opacity: 0,
-          duration: 1,
-          ease: "power3.out",
-        });
-      });
-    }
-  }, []);
-
-  // Navbar glass effect on scroll
-  useEffect(() => {
-    const handleScroll = () => {
-      if (!navbarRef.current) return;
-      if (window.scrollY > 50) {
-        navbarRef.current.classList.add("glass-navbar");
-      } else {
-        navbarRef.current.classList.remove("glass-navbar");
-      }
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  // Dynamic API URL
-  const API_BASE = "https://pathtopages.onrender.com";
-
-  console.log("🔗 Using API Base:", API_BASE);
-
-  // Fetch all products without filter
-  const [products, setProducts] = useState([]); // NOTE: products are fetched and set, but not used in the JSX below (UI uses hardcoded product cards)
-  // eslint-disable-next-line no-unused-vars
-  const [loading, setLoading] = useState(false); // UNUSED in render: loading state is set but not shown anywhere in the UI
-
-  // eslint-disable-next-line no-unused-vars
-  const fullImageUrl = (imgPath) => {
-    if (!imgPath) return "";
-    if (imgPath.startsWith("http")) return imgPath;
-    return `${API_BASE}/${imgPath.replace(/^\/+/, "")}`;
-  }; // UNUSED: fullImageUrl helper is defined but not used — images in the component are hardcoded external URLs
-
-  useEffect(() => {
-    async function fetchProducts() {
-      setLoading(true);
-      try {
-        const response = await fetch(
-          `${API_BASE}/api/v1/products/?category=bookmark`
-        );
-        const data = await response.json();
-        setProducts(data.products || []);
-      } catch (error) {
-        console.error("Error fetching products:", error);
-        setProducts([]);
-      }
-      setLoading(false);
-    }
-    fetchProducts();
-  }, []);
-
-  // Sort products to ensure journal appears first, then bookmark
-  // eslint-disable-next-line no-unused-vars
-  const sortedProducts = [...products].sort((a, b) => {
-    if (a.category === "journal" && b.category !== "journal") return -1;
-    if (a.category !== "journal" && b.category === "journal") return 1;
-    return 0;
-  }); // UNUSED: sortedProducts is computed but not used in render — product cards are static/hardcoded
 
   return (
     <>
-      {/* Navbar */}
-      <nav
-        ref={navbarRef}
-        className="navbar navbar-expand-lg fixed-top glass-navbar p-3"
-      >
+      {/* ▬▬▬▬▬▬▬ NAVBAR (Leather-Themed, Minimalist) ▬▬▬▬▬▬▬ */}
+      <nav className="navbar navbar-expand-lg fixed-top px-3 py-2 custom-navbar">
         <div className="container-fluid">
+          {/* Logo + Brand */}
           <Link to="/" className="navbar-brand d-flex align-items-center">
             <img
               src={process.env.PUBLIC_URL + "/logo.png"}
               alt="Logo"
-              height="40"
+              height="38"
             />
-
-            <span className="happy-monkey-regular ms-2 fs-4 fw-bold text-white">
+            <span className="ms-2 fs-4 fw-semibold brand-text dancing-script">
               PathToPages
             </span>
           </Link>
 
+          {/* Mobile Toggle */}
           <button
             className="navbar-toggler"
             type="button"
@@ -181,28 +37,36 @@ const Home = () => {
             <span className="navbar-toggler-icon"></span>
           </button>
 
+          {/* Navbar Links */}
           <div
             className={`collapse navbar-collapse ${isMenuOpen ? "show" : ""}`}
           >
-            <ul className="navbar-nav ms-auto mb-2 mb-lg-0 text-white">
+            <ul className="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
               <li className="nav-item">
-                <Link to="/" className="nav-link text-white">
+                <Link to="/" className="nav-link nav-link-custom px-3">
                   Home
                 </Link>
               </li>
+
               <li className="nav-item">
-                <Link to="/shop" className="nav-link text-white">
+                <Link to="/shop" className="nav-link nav-link-custom px-3">
                   Shop
                 </Link>
               </li>
-              {/* <li className="nav-item">
-                <Link to="/cart" className="nav-link text-white">
-                  Cart
-                </Link>
-              </li> */}
+
               <li className="nav-item">
-                <Link to="/profile" className="nav-link text-white">
+                <Link to="/profile" className="nav-link nav-link-custom px-3">
                   Profile
+                </Link>
+              </li>
+
+              {/* CART ICON */}
+              <li className="nav-item ms-3">
+                <Link to="/cart" className="position-relative cart-link">
+                  <ShoppingCart size={26} className="cart-icon" />
+                  <span className="badge cart-badge bg-danger text-white rounded-circle">
+                    0
+                  </span>
                 </Link>
               </li>
             </ul>
@@ -210,292 +74,246 @@ const Home = () => {
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <header className="hero d-flex flex-column justify-content-center align-items-center text-center text-white vh-100 position-relative">
-        <img
-          src="https://raw.githubusercontent.com/AnasuriNithish/PathtoPages/ab2fbd5de49fb4fbb735842755026ba7fbf96de4/Frontend/IMG-20251027-WA0027.jpg"
-          alt="Hero background"
-          className="position-absolute top-0 start-0 w-100 h-100 object-fit-cover"
-          style={{ zIndex: -2 }}
-        />
-        <div
-          className="hero-overlay position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-50"
-          style={{ zIndex: -1 }}
-        ></div>
-        <h1 className="happy-monkey-regular hero-title display-1 fw-bold">
+      {/* ▬▬▬▬▬▬▬ HERO SECTION ▬▬▬▬▬▬▬ */}
+      <header className="d-flex flex-column justify-content-center align-items-center text-center text-white vh-100 hero-section">
+        <div className="hero-overlay"></div>
+
+        <h1 className="display-2 dancing-script fw-bold position-relative">
           Path To Pages
         </h1>
-        <p className="happy-monkey-regular lead animated-text max-w-600px px-3">
-          From snapshots to stories, keep your travel memories alive in a
-          journal made for your adventures.
+        <p className="lead position-relative mt-3 px-3">
+          Capture your journeys in a beautifully crafted journal.
         </p>
       </header>
 
+      {/* ▬▬▬▬▬▬▬ FEATURED PRODUCTS ▬▬▬▬▬▬▬ */}
       <main className="container py-5 text-center">
-        <section id="featured" className="featured-products">
-          <h2 className="happy-monkey-regular mb-5 animated-text">
-            Featured Products
-          </h2>
+        <h2 className="fw-bold mb-4 text-dark dancing-script">
+          Featured Products
+        </h2>
 
-          <div className="row g-4 justify-content-center">
-            {/* Travel Journal Card */}
-            <div className="col-md-4">
-              <Link to="/journal" className="text-decoration-none">
-                <div
-                  className="card glass-card h-100 shadow-sm"
-                  style={{ cursor: "pointer" }}
-                >
-                  <img
-                    src="https://raw.githubusercontent.com/AnasuriNithish/PathtoPages/ab2fbd5de49fb4fbb735842755026ba7fbf96de4/Frontend/IMG-20251023-WA0020.jpg"
-                    alt="Travel Journal"
-                    className="card-img-top"
-                    style={{
-                      height: "300px",
-                      objectFit: "cover",
-                      borderRadius: "12px 12px 0 0",
-                    }}
-                  />
-                  <div className="card-body">
-                    <h5 className="card-title">Travel Journal</h5>
-                    <p className="card-text">
-                      A vintage-style refillable journal to capture your
-                      adventures.
-                    </p>
-                  </div>
+        <div className="row g-4 justify-content-center">
+          {/* Travel Journal */}
+          <div className="col-md-4">
+            <Link to="/journal" className="text-decoration-none text-dark">
+              <div className="card border-0 shadow-sm h-100">
+                <img
+                  src="https://raw.githubusercontent.com/AnasuriNithish/PathtoPages/ab2fbd5de49fb4fbb735842755026ba7fbf96de4/Frontend/IMG-20251023-WA0020.jpg"
+                  alt="Travel Journal"
+                  className="card-img-top"
+                  style={{ height: "280px", objectFit: "cover" }}
+                />
+                <div className="card-body">
+                  <h5 className="fw-semibold dancing-script">Travel Journal</h5>
+                  {/* <p className="small text-muted">
+                    Capture your memories in style.
+                  </p> */}
                 </div>
-              </Link>
-            </div>
-
-            {/* Handcrafted Bookmark Card */}
-            <div className="col-md-4">
-              <Link to="/bookmark" className="text-decoration-none">
-                <div
-                  className="card glass-card h-100 shadow-sm"
-                  style={{ cursor: "pointer" }}
-                >
-                  <img
-                    src="https://raw.githubusercontent.com/AnasuriNithish/PathtoPages/ab2fbd5de49fb4fbb735842755026ba7fbf96de4/Frontend/IMG-20251027-WA0010.jpg"
-                    alt="Handcrafted Bookmark"
-                    className="card-img-top"
-                    style={{
-                      height: "300px",
-                      objectFit: "cover",
-                      borderRadius: "12px 12px 0 0",
-                    }}
-                  />
-                  <div className="card-body">
-                    <h5 className="card-title">Handcrafted Bookmark</h5>
-                    <p className="card-text">
-                      Premium handcrafted bookmarks for every book lover.
-                    </p>
-                  </div>
-                </div>
-              </Link>
-            </div>
+              </div>
+            </Link>
           </div>
-        </section>
+
+          {/* Bookmark */}
+          <div className="col-md-4">
+            <Link to="/bookmark" className="text-decoration-none text-dark">
+              <div className="card border-0 shadow-sm h-100">
+                <img
+                  src="https://raw.githubusercontent.com/AnasuriNithish/PathtoPages/ab2fbd5de49fb4fbb735842755026ba7fbf96de4/Frontend/IMG-20251027-WA0010.jpg"
+                  alt="Bookmark"
+                  className="card-img-top"
+                  style={{ height: "280px", objectFit: "cover" }}
+                />
+                <div className="card-body">
+                  <h5 className="fw-semibold dancing-script">
+                    Handcrafted Bookmark
+                  </h5>
+                  {/* <p className="small text-muted">
+                    For passionate book lovers.
+                  </p> */}
+                </div>
+              </div>
+            </Link>
+          </div>
+        </div>
       </main>
 
-      {/* Footer */}
-      <footer className="glass-footer d-flex flex-column flex-md-row align-items-center justify-content-between px-4 py-5 text-center text-md-start">
-        <div className="footer-title mb-4 mb-md-0">
-          <h4 className="happy-monkey-regular mb-1">Path To Pages</h4>
-          {/* <span className="happy-monkey-regular small">
-            Designed by Nithish
-          </span> */}
+      {/* ▬▬▬▬▬▬▬ FOOTER ▬▬▬▬▬▬▬ */}
+      <footer className="custom-footer py-4 mt-62">
+        <div className="footer-left">
+          <h5 className="footer-title dancing-script mb-1">Path To Pages</h5>
+          {/* <p className="footer-subtext small mb-0">
+            Designed with passion by Nithish
+          </p> */}
         </div>
 
-        <div className="quick-links mb-4 mb-md-0">
-          <h6 className="mb-3">Quick Links</h6>
-          <ul className="list-unstyled d-flex flex-wrap justify-content-center justify-content-md-start gap-3">
-            <li>
-              <Link to="/" className="footer-link">
-                Home
-              </Link>
-            </li>
-            <li>
-              <Link to="/shop" className="footer-link">
-                Shop
-              </Link>
-            </li>
-            <li>
-              <Link to="/profile" className="footer-link">
-                Profile
-              </Link>
-            </li>
-          </ul>
-        </div>
-
-        <div className="social-icons d-flex justify-content-center">
-          <a
-            href="https://wa.me/918019418800"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <FaWhatsapp />
+        <div className="footer-center">
+          <a href="https://wa.me/918019418800" className="footer-icon">
+            <FaWhatsapp size={22} />
           </a>
           <a
             href="https://www.instagram.com/pathtopages"
-            target="_blank"
-            rel="noopener noreferrer"
+            className="footer-icon"
           >
-            <FaInstagram />
+            <FaInstagram size={22} />
           </a>
-          {/* <a
-            href="https://www.threads.net/pathtopages"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <SiThreads />
-          </a> */}
+          <a href="https://www.threads.net/pathtopages" className="footer-icon">
+            <SiThreads size={22} />
+          </a>
+        </div>
+
+        <div className="footer-right">
+          <p className="small footer-copy mb-0">
+            © {new Date().getFullYear()} PathToPages
+          </p>
         </div>
       </footer>
 
-      {/* Scrapbook Journal Theme CSS */}
-      <style jsx="true">{`
+      {/* ▬▬▬▬▬▬▬ INLINE STYLES FOR THEMED NAV + HERO ▬▬▬▬▬▬▬ */}
+      <style>{`
+       @import url("https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&display=swap");
+        .dancing-script {
+          font-family: "Dancing Script", cursive;
+          font-optical-sizing: auto;
+          font-weight: 600; /* you can change to 400, 500, 700 etc. */
+          font-style: normal;
+        }
         body {
           background-color: #fdf8f3;
           font-family: "Poppins", sans-serif;
         }
-        .navbar {
-          background: #7a5c4d
-            url("https://www.transparenttextures.com/patterns/leather.png");
-          border-bottom: 3px dashed #f8ead8;
-          box-shadow: 0 4px 15px rgba(58, 37, 18, 0.3);
+
+        /* Themed Navbar based on photo colors */
+        .custom-navbar {
+          background: #7a5c4d url("https://www.transparenttextures.com/patterns/leather.png");
+          border-bottom: 2px dashed #f8ead8;
+          box-shadow: 0 4px 15px rgba(58, 37, 18, 0.35);
         }
-        .navbar-brand span {
-          font-family: "Caveat", cursive;
+
+        .brand-text {
           color: #fff8f0;
-          letter-spacing: 1.5px;
+          letter-spacing: 1px;
         }
-        .nav-link {
+
+        .nav-link-custom {
           color: #f8ead8 !important;
-          font-family: "Poppins", sans-serif;
           font-weight: 500;
-          transition: 0.3s;
+          transition: color 0.2s ease;
         }
-        .nav-link:hover {
+
+        .nav-link-custom:hover {
           color: #ffe6b3 !important;
         }
-        .hero {
+
+        .cart-icon {
+          color: #fff8f0;
+        }
+
+        .cart-link:hover .cart-icon {
+          color: #ffe6b3;
+        }
+
+        .cart-badge {
+          font-size: 10px;
+          position: absolute;
+          top: -5px;
+          right: -10px;
+          padding: 4px 6px;
+        }
+
+        .navbar-toggler {
+          border-color: #f8ead8;
+        }
+
+        .navbar-toggler-icon {
+          background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(248,234,216,0.9)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+        }
+
+        /* Hero section background from same image */
+        .hero-section {
           position: relative;
-          overflow: hidden;
-          color: #5a4633;
+          background-image: url('https://raw.githubusercontent.com/AnasuriNithish/PathtoPages/ab2fbd5de49fb4fbb735842755026ba7fbf96de4/Frontend/IMG-20251027-WA0027.jpg');
+          background-size: cover;
+          background-position: center;
         }
-        .hero-bg {
-          object-fit: cover;
-          object-position: center;
-          z-index: 0;
-          filter: brightness(0.7);
-        }
+
         .hero-overlay {
-          background: rgba(0, 0, 0, 0.3);
+          position: absolute;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.35);
+        }
+
+        .hero-section h1,
+        .hero-section p {
+          position: relative;
           z-index: 1;
         }
-        .hero-title,
-        .hero p {
-          position: relative;
-          z-index: 2;
-        }
-        .glass-card {
-          background: #fff8f0;
-          border: 2px solid #e5c7a0;
-          border-radius: 12px;
-          box-shadow: 4px 6px 0 #d7b88e;
-          transition: transform 0.2s ease, box-shadow 0.2s ease;
-          font-family: "Poppins", sans-serif;
-        }
-        .glass-card:hover {
-          transform: translateY(-4px);
-          box-shadow: 6px 8px 0 #c49a6c;
-        }
-        .glass-card .card-title {
-          font-family: "Caveat", cursive;
-          color: #5a3b1c;
-          font-size: 1.4rem;
-        }
-        .glass-card .card-text {
-          color: #6d5844;
-          font-size: 0.95rem;
-        }
-        button.btn {
-          border: 2px dashed #9b7653;
-          background: #f2dfc2;
-          color: #4a3822;
-          border-radius: 8px;
-          transition: 0.3s;
-        }
-        button.btn:hover {
-          background: #e7cda3;
-          transform: translateY(-2px);
-        }
-        .featured-products h2 {
-          font-family: "Caveat Brush", cursive;
-          color: #5a3b1c;
-          border-bottom: 3px dashed #caa472;
-          display: inline-block;
-          padding-bottom: 5px;
-        }
-        .glass-footer {
+                /* Footer Matches Navbar Leather Theme */
+        .custom-footer {
           background: #7a5c4d
             url("https://www.transparenttextures.com/patterns/paper-1.png");
-          color: #fdf8f3;
-          border-top: 3px dashed #f8ead8;
+          border-top: 2px dashed #f8ead8;
+          color: #f8ead8;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 1.5rem;
+          padding-inline: 2rem;
           position: relative;
+          margin-top: 260px;
         }
-        .glass-footer::before,
-        .glass-footer::after {
-          content: "";
-          position: absolute;
-          width: 60px;
-          height: 20px;
-          background: #e8d5b7;
-          top: -10px;
-          transform: rotate(-3deg);
-          border: 1px solid #d1b38f;
-          border-radius: 4px;
+
+        /* Columns */
+        .footer-left,
+        .footer-right {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
         }
-        .glass-footer::after {
-          right: 15%;
-          transform: rotate(3deg);
+
+        .footer-center {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 1rem;
         }
-        .footer-title h4 {
-          font-family: "Caveat Brush", cursive;
+
+        /* Text + icons */
+        .footer-title {
           color: #ffe6b3;
-          text-shadow: 1px 1px 0 #4d3b2b;
+          font-size: 1.6rem;
         }
-        .quick-links h6 {
-          font-family: "Caveat", cursive;
-          font-size: 1.3rem;
-          color: #fff0d8;
+
+        .footer-subtext {
+          color: #f8ead8;
+          opacity: 0.85;
         }
-        .footer-link {
-          color: #fceac7;
-          text-decoration: none;
-          font-size: 1rem;
-          transition: color 0.3s ease, transform 0.2s ease;
-        }
-        .footer-link:hover {
+
+        .footer-icon {
           color: #ffe6b3;
-          transform: translateY(-2px);
+          transition: 0.3s ease;
         }
-        .social-icons a {
-          font-size: 1.7rem;
-          margin-left: 1rem;
-          color: #ffe6b3;
-          transition: all 0.3s ease;
+
+        .footer-icon:hover {
+          color: #ffffff;
+          transform: scale(1.12);
         }
-        .social-icons a:hover {
-          color: #fff;
-          transform: scale(1.2);
+
+        .footer-copy {
+          color: #f8ead8;
+          opacity: 0.85;
         }
+
+        /* Mobile: stack & center again */
         @media (max-width: 768px) {
-          .glass-footer {
+          .custom-footer {
             flex-direction: column;
             text-align: center;
+            padding: 2rem 1rem;
           }
-          .quick-links ul {
-            justify-content: center;
+
+          .footer-left,
+          .footer-right {
+            align-items: center;
           }
         }
       `}</style>

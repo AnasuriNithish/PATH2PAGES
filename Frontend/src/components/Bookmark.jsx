@@ -1,76 +1,25 @@
-﻿import React, { useState, useEffect, useCallback } from "react";
-import { Link } from "react-router-dom";
+﻿// src/components/Bookmark.jsx
+import React, { useState, useEffect, useCallback } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
-import {
-  ShoppingCart,
-  Loader2,
-  Trash2,
-  ArrowLeft,
-  QrCode,
-  DollarSign,
-} from "lucide-react";
+import { ShoppingCart, Loader2 } from "lucide-react";
 import { FaWhatsapp, FaInstagram } from "react-icons/fa";
 import { SiThreads } from "react-icons/si";
 
 /* ===========================
-   API CONFIG (same style as Journal.jsx)
+   SHARED CONFIG
    ========================== */
 
-const API_BASE_URL = "https://pathtopages.onrender.com/api/v1";
-
-// TODO: put your real userId from backend here
-const USER_ID = "6906fc0a502d8f37d2146823";
-
-// Safe check so 'process' is not referenced in non-Node environments
-const API_TOKEN =
-  (typeof process !== "undefined" &&
-    process.env &&
-    process.env.REACT_APP_PTP_API_KEY) ||
-  "";
-
-// Generic helper
-const callApi = async (method, path, body) => {
-  try {
-    const res = await fetch(`${API_BASE_URL}${path}`, {
-      method,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: API_TOKEN ? `Bearer ${API_TOKEN}` : undefined,
-      },
-      body: body ? JSON.stringify(body) : undefined,
-    });
-
-    if (!res.ok) {
-      let msg = `${method} ${path} failed`;
-      try {
-        const t = await res.text();
-        msg += `: ${t}`;
-      } catch {
-        /* ignore */
-      }
-      throw new Error(msg);
-    }
-    if (res.status === 204) return null;
-    return res.json();
-  } catch (error) {
-    console.error("API Error:", error);
-    throw error;
-  }
-};
-
-const addOrUpdateCart = (userId, productId, quantity) =>
-  callApi("POST", `/user/${userId}/cart/${productId}`, { quantity });
-
-const removeProductFromCart = (userId, productId) =>
-  callApi("DELETE", `/user/${userId}/cart/${productId}`);
+const CART_KEY = "pathtopages_cart"; // same key used in Journal.jsx / Checkout.jsx
 
 /* ===========================
-   MOCK DATA – PLUG YOUR REAL PRODUCT IDS
+   MOCK DATA – USE REAL PRODUCT ID HERE
    ========================== */
 
 const BOOKMARK_PRODUCTS = [
   {
-    id: "68f8ffcaddfcfc98412ee990", // Season bookmark (example)
+    // PUT your real MongoDB _id for the bookmark product here
+    id: "68f8ffcaddfcfc98412ee990",
     title: "Vintage Leather",
     subtitle: "The Traveler's Compass Bookmark",
     description:
@@ -88,7 +37,7 @@ const BOOKMARK_PRODUCTS = [
 ];
 
 /* ===========================
-   JOURNAL.jsx THEME - EXACT COPY
+   THEME (same as existing file)
    ========================== */
 
 const CustomStyles = () => (
@@ -115,6 +64,13 @@ const CustomStyles = () => (
     />
 
     <style>{`
+     @import url("https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&display=swap");
+        .dancing-script {
+          font-family: "Dancing Script", cursive;
+          font-optical-sizing: auto;
+          font-weight: 600; /* you can change to 400, 500, 700 etc. */
+          font-style: normal;
+        }
       html, body, #root {
         height: 100%;
         margin: 0;
@@ -193,58 +149,75 @@ const CustomStyles = () => (
         color: #ffe6b3 !important;
       }
       
-      .glass-footer {
-        background: #7a5c4d url("https://www.transparenttextures.com/patterns/paper-1.png");
-        color: #fdf8f3;
-        border-top: 3px dashed #f8ead8;
-        position: relative;
-      }
-      .glass-footer::before,
-      .glass-footer::after {
-        content: "";
-        position: absolute;
-        width: 60px;
-        height: 20px;
-        background: #e8d5b7;
-        top: -10px;
-        transform: rotate(-3deg);
-        border: 1px solid #d1b38f;
-        border-radius: 4px;
-      }
-      .glass-footer::after {
-        right: 15%;
-        transform: rotate(3deg);
-      }
-      .footer-title h4 {
-        font-family: "Caveat Brush", cursive;
-        color: #ffe6b3;
-        text-shadow: 1px 1px 0 #4d3b2b;
-      }
-      .quick-links h6 {
-        font-family: "Caveat", cursive;
-        font-size: 1.3rem;
-        color: #fff0d8;
-      }
-      .footer-link {
-        color: #fceac7;
-        text-decoration: none;
-        font-size: 1rem;
-        transition: color 0.3s ease, transform 0.2s ease;
-      }
-      .footer-link:hover {
-        color: #ffe6b3;
-        transform: translateY(-2px);
-      }
-      .social-icons a {
-        font-size: 1.7rem;
-        margin-left: 1rem;
-        color: #ffe6b3;
-        transition: all 0.3s ease;
-      }
-      .social-icons a:hover {
-        color: #fff;
-        transform: scale(1.2);
-      }
+       /* Footer Matches Navbar Leather Theme */
+        .custom-footer {
+          background: #7a5c4d
+            url("https://www.transparenttextures.com/patterns/paper-1.png");
+          border-top: 2px dashed #f8ead8;
+          color: #f8ead8;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 1.5rem;
+          padding-inline: 2rem;
+          position: relative;
+          margin-top: 260px;
+        }
+
+        /* Columns */
+        .footer-left,
+        .footer-right {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+        }
+
+        .footer-center {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 1rem;
+        }
+
+        /* Text + icons */
+        .footer-title {
+          color: #ffe6b3;
+          font-size: 1.6rem;
+        }
+
+        .footer-subtext {
+          color: #f8ead8;
+          opacity: 0.85;
+        }
+
+        .footer-icon {
+          color: #ffe6b3;
+          transition: 0.3s ease;
+        }
+
+        .footer-icon:hover {
+          color: #ffffff;
+          transform: scale(1.12);
+        }
+
+        .footer-copy {
+          color: #f8ead8;
+          opacity: 0.85;
+        }
+
+        /* Mobile: stack & center again */
+        @media (max-width: 768px) {
+          .custom-footer {
+            flex-direction: column;
+            text-align: center;
+            padding: 2rem 1rem;
+          }
+
+          .footer-left,
+          .footer-right {
+            align-items: center;
+          }
+        }
 
       /* Simple overlay buttons for slideshow */
       .slideshow-wrapper {
@@ -444,529 +417,219 @@ const BookmarkCard = ({ product, onAddToCart, addingId }) => {
   );
 };
 
-const CartItem = ({ item, onRemove, onUpdateQty }) => {
-  const isRemoving = false;
-
-  return (
-    <li key={item.id} className="list-group-item d-flex align-items-center p-3">
-      <div
-        className="rounded me-3"
-        style={{
-          width: 60,
-          height: 60,
-          backgroundImage: `url(${item.image})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      />
-      <div className="flex-grow-1">
-        <div className="d-flex justify-content-between">
-          <h6 className="mb-1">{item.title}</h6>
-          <span className="fw-bold text-vintage-accent">
-            {formatCurrency(item.price * item.quantity)}
-          </span>
-        </div>
-        <div className="d-flex align-items-center mt-1">
-          <small className="text-muted me-3">
-            {formatCurrency(item.price)} each
-          </small>
-          <div className="btn-group btn-group-sm" role="group">
-            <button
-              className="btn btn-outline-secondary"
-              onClick={() => onUpdateQty(item.id, -1)}
-              disabled={item.quantity <= 1}
-            >
-              -
-            </button>
-            <span className="btn btn-outline-secondary disabled px-3">
-              {item.quantity}
-            </span>
-            <button
-              className="btn btn-outline-secondary"
-              onClick={() => onUpdateQty(item.id, 1)}
-            >
-              +
-            </button>
-          </div>
-        </div>
-      </div>
-      <button
-        className="btn btn-sm btn-link text-danger ms-3"
-        onClick={() => onRemove(item.id)}
-        disabled={isRemoving}
-      >
-        <Trash2 size={18} />
-      </button>
-    </li>
-  );
-};
-
-const CartView = ({
-  cartItems,
-  cartTotal,
-  onBackToShop,
-  onCheckout,
-  onRemove,
-  onUpdateQty,
-}) => (
-  <div className="container pt-3 pb-4">
-    <div className="row g-4">
-      <div className="col-lg-8">
-        <div className="card border-0 vintage-card-shadow rounded-3">
-          <div className="card-body p-4">
-            <div className="d-flex align-items-center mb-3">
-              <button
-                className="btn btn-link text-decoration-none text-muted p-0 me-2"
-                onClick={onBackToShop}
-              >
-                <ArrowLeft size={18} className="me-1" />
-                Back to bookmarks
-              </button>
-              <h3 className="ms-auto mb-0 display-font text-vintage-accent">
-                Your Cart
-              </h3>
-            </div>
-
-            {cartItems.length === 0 ? (
-              <div className="alert alert-warning">
-                Your cart is empty. Add some bookmarks to begin your journey.
-              </div>
-            ) : (
-              <ul className="list-group list-group-flush">
-                {cartItems.map((item) => (
-                  <CartItem
-                    key={item.id}
-                    item={item}
-                    onRemove={onRemove}
-                    onUpdateQty={onUpdateQty}
-                  />
-                ))}
-              </ul>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div className="col-lg-4 mt-4 mt-lg-0">
-        <div className="card p-4 vintage-card-shadow border-0 rounded-3">
-          <h5 className="display-font text-vintage-accent mb-3">
-            Order Summary
-          </h5>
-          <div className="d-flex justify-content-between mb-2">
-            <span>Subtotal</span>
-            <span>{formatCurrency(cartTotal)}</span>
-          </div>
-          <div className="d-flex justify-content-between mb-4">
-            <span>Shipping</span>
-            <span>Free</span>
-          </div>
-          <hr />
-          <div className="d-flex justify-content-between mb-4 fw-bold">
-            <span>Total</span>
-            <span className="h5 text-vintage-accent mb-0">
-              {formatCurrency(cartTotal)}
-            </span>
-          </div>
-
-          <button
-            className="btn btn-vintage w-100 py-2 d-flex align-items-center justify-content-center gap-2"
-            disabled={cartItems.length === 0}
-            onClick={onCheckout}
-          >
-            <DollarSign size={18} />
-            Proceed to Checkout
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-);
-
-const CheckoutView = ({ cartTotal, onBackToCart, onOrderComplete }) => {
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [showQR, setShowQR] = useState(false);
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setIsProcessing(true);
-
-    setTimeout(() => {
-      setIsProcessing(false);
-      setShowQR(true);
-
-      setTimeout(() => {
-        onOrderComplete();
-      }, 3000);
-    }, 1200);
-  };
-
-  return (
-    <div className="container pt-4 pb-5" style={{ maxWidth: "600px" }}>
-      <div className="row justify-content-center">
-        <div className="col-lg-12">
-          <div className="card border-0 vintage-card-shadow rounded-3">
-            <div className="card-body p-4">
-              <div className="d-flex justify-content-between align-items-center mb-3">
-                <button
-                  className="btn btn-link text-decoration-none text-muted p-0"
-                  onClick={onBackToCart}
-                  type="button"
-                >
-                  <ArrowLeft size={18} className="me-1" />
-                  Back to Cart
-                </button>
-                <h4 className="display-font text-vintage-accent mb-0">
-                  Secure Checkout
-                </h4>
-              </div>
-
-              <form onSubmit={handleSubmit}>
-                <h6 className="mb-3">Shipping Information</h6>
-                <div className="mb-3">
-                  <label className="form-label small">Full Name</label>
-                  <input
-                    className="form-control"
-                    required
-                    placeholder="John Doe"
-                    style={{
-                      backgroundColor: "#f8f5ed",
-                      borderColor: "#c4a484",
-                    }}
-                  />
-                </div>
-                <div className="mb-3">
-                  <label className="form-label small">Address</label>
-                  <input
-                    className="form-control"
-                    required
-                    placeholder="123 Writer's Alley"
-                    style={{
-                      backgroundColor: "#f8f5ed",
-                      borderColor: "#c4a484",
-                    }}
-                  />
-                </div>
-
-                <h6 className="mt-4 mb-3">Payment Method</h6>
-                <div className="alert alert-info small d-flex align-items-center gap-2 mb-4">
-                  <QrCode size={20} />
-                  Payment via QR / UPI is the default method.
-                </div>
-
-                <div className="d-flex justify-content-between my-4 border-top pt-3">
-                  <span className="fw-bold">Order Total:</span>
-                  <span className="fw-bold h4 text-vintage-accent mb-0">
-                    {formatCurrency(cartTotal)}
-                  </span>
-                </div>
-
-                <button
-                  className="btn btn-vintage w-100 py-2 d-flex align-items-center justify-content-center gap-2"
-                  type="submit"
-                  disabled={isProcessing}
-                >
-                  {isProcessing ? (
-                    <Loader2 size={20} className="spin-anim" />
-                  ) : (
-                    <>
-                      <DollarSign size={18} />
-                      Pay Now (Show QR)
-                    </>
-                  )}
-                </button>
-              </form>
-
-              {showQR && (
-                <div className="mt-4 text-center">
-                  <p className="small text-muted mb-2">
-                    Scan this QR with your UPI app to complete payment.
-                  </p>
-                  <div
-                    className="d-inline-flex align-items-center justify-content-center rounded-3 border p-3 bg-light"
-                    style={{
-                      width: 200,
-                      height: 200,
-                    }}
-                  >
-                    <QrCode size={120} />
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 /* ===========================
    MAIN BOOKMARK PAGE
    ========================== */
 
 const BookmarkShop = () => {
-  const [view, setView] = useState("shop"); // 'shop' | 'cart' | 'checkout'
-  const [cartItems, setCartItems] = useState([]);
   const [addingId, setAddingId] = useState(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [cartItemCount, setCartItemCount] = useState(0);
 
-  const cartTotal = cartItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
-  const cartItemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const navigate = useNavigate();
 
-  const handleAddToCart = useCallback(async (product) => {
-    if (!product.id || product.id.startsWith("PUT_REAL_PRODUCT_ID")) {
-      console.error(
-        `Product ID is not configured for "${product.title}". Please paste the real MongoDB _id in the product list.`
-      );
-      setAddingId(product.id);
-      setTimeout(() => {
-        setCartItems((prev) => {
-          const existing = prev.find((i) => i.id === product.id);
-          if (existing) {
-            return prev.map((i) =>
-              i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i
-            );
-          }
-          return [...prev, { ...product, quantity: 1 }];
-        });
-        setView("cart");
-        setAddingId(null);
-      }, 500);
-
-      return;
-    }
-
-    try {
-      setAddingId(product.id);
-      await addOrUpdateCart(USER_ID, product.id, 1);
-
-      setCartItems((prev) => {
-        const existing = prev.find((i) => i.id === product.id);
-        if (existing) {
-          return prev.map((i) =>
-            i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i
-          );
-        }
-        return [...prev, { ...product, quantity: 1 }];
-      });
-
-      setView("cart");
-    } catch (err) {
-      console.error("AddOrUpdateCart error:", err);
-      setCartItems((prev) => {
-        const existing = prev.find((i) => i.id === product.id);
-        if (existing) {
-          return prev.map((i) =>
-            i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i
-          );
-        }
-        return [...prev, { ...product, quantity: 1 }];
-      });
-      setView("cart");
-    } finally {
-      setAddingId(null);
-    }
-  }, []);
-
-  const handleRemoveFromCart = useCallback(async (productId) => {
-    try {
-      await removeProductFromCart(USER_ID, productId);
-    } catch (err) {
-      console.error("removeProductFromCart error:", err);
-    } finally {
-      setCartItems((prev) => prev.filter((i) => i.id !== productId));
-    }
-  }, []);
-
-  const handleUpdateQty = useCallback(
-    async (productId, delta) => {
-      const item = cartItems.find((i) => i.id === productId);
-      if (!item) return;
-
-      const newQty = Math.max(1, item.quantity + delta);
-
-      setCartItems((prev) =>
-        prev.map((i) => (i.id === productId ? { ...i, quantity: newQty } : i))
-      );
-
+  // Read cart count from localStorage on mount + when storage changes
+  useEffect(() => {
+    const loadCartCount = () => {
       try {
-        await addOrUpdateCart(USER_ID, productId, newQty);
+        const raw = localStorage.getItem(CART_KEY);
+        const cart = raw ? JSON.parse(raw) : [];
+        const count = Array.isArray(cart)
+          ? cart.reduce((sum, item) => sum + (item.quantity || 1), 0)
+          : 0;
+        setCartItemCount(count);
+      } catch {
+        setCartItemCount(0);
+      }
+    };
+
+    loadCartCount();
+
+    // Optional: listen for changes from other tabs
+    const handler = (e) => {
+      if (e.key === CART_KEY) loadCartCount();
+    };
+    window.addEventListener("storage", handler);
+    return () => window.removeEventListener("storage", handler);
+  }, []);
+
+  // Add to global cart (localStorage) and go to /cart
+  const handleAddToCart = useCallback(
+    (product) => {
+      try {
+        setAddingId(product.id);
+
+        const raw = localStorage.getItem(CART_KEY);
+        const cart = raw ? JSON.parse(raw) : [];
+
+        const image =
+          product.image ||
+          (product.images && product.images.length > 0
+            ? product.images[0]
+            : "");
+
+        const existingIndex = Array.isArray(cart)
+          ? cart.findIndex((item) => item.id === product.id)
+          : -1;
+
+        let newCart;
+        if (!Array.isArray(cart)) {
+          newCart = [
+            {
+              id: product.id,
+              title: product.title,
+              price: product.price,
+              quantity: 1,
+              image,
+            },
+          ];
+        } else if (existingIndex > -1) {
+          newCart = cart.map((item, idx) =>
+            idx === existingIndex
+              ? { ...item, quantity: (item.quantity || 1) + 1 }
+              : item
+          );
+        } else {
+          newCart = [
+            ...cart,
+            {
+              id: product.id,
+              title: product.title,
+              price: product.price,
+              quantity: 1,
+              image,
+            },
+          ];
+        }
+
+        localStorage.setItem(CART_KEY, JSON.stringify(newCart));
+
+        // Update badge count
+        const count = newCart.reduce(
+          (sum, item) => sum + (item.quantity || 1),
+          0
+        );
+        setCartItemCount(count);
+
+        // Navigate to global Cart page
+        navigate("/cart");
       } catch (err) {
-        console.error("AddOrUpdateCart (qty change) error:", err);
+        console.error("Error adding bookmark to cart:", err);
+        alert("Could not add to cart. Please try again.");
+      } finally {
+        setAddingId(null);
       }
     },
-    [cartItems]
+    [navigate]
   );
-
-  const handleOrderComplete = () => {
-    setCartItems([]);
-    setView("shop");
-  };
-
-  const navigate = (newView) => {
-    setView(newView);
-    setIsMenuOpen(false);
-  };
-
-  const renderContent = () => {
-    switch (view) {
-      case "cart":
-        return (
-          <CartView
-            cartItems={cartItems}
-            cartTotal={cartTotal}
-            onBackToShop={() => navigate("shop")}
-            onCheckout={() => navigate("checkout")}
-            onRemove={handleRemoveFromCart}
-            onUpdateQty={handleUpdateQty}
-          />
-        );
-      case "checkout":
-        return (
-          <CheckoutView
-            cartTotal={cartTotal}
-            onBackToCart={() => navigate("cart")}
-            onOrderComplete={handleOrderComplete}
-          />
-        );
-      case "shop":
-      default:
-        return (
-          <div className="container py-5">
-            <div className="row">
-              {BOOKMARK_PRODUCTS.map((product) => (
-                <BookmarkCard
-                  key={product.id}
-                  product={product}
-                  onAddToCart={handleAddToCart}
-                  addingId={addingId}
-                />
-              ))}
-            </div>
-          </div>
-        );
-    }
-  };
 
   return (
     <div className="page-bg">
       <CustomStyles />
 
-      <nav className="navbar navbar-expand-lg fixed-top glass-navbar p-3">
-        <div className="container-fluid">
-          <Link to="/" className="navbar-brand d-flex align-items-center">
-            <img
-              src={process.env.PUBLIC_URL + "/logo.png"}
-              alt="Logo"
-              height="40"
-            />
-            <span className="happy-monkey-regular ms-2 fs-4 fw-bold text-white">
-              PathToPages
-            </span>
-          </Link>
+      {/* Navbar */}
+        <nav className="navbar navbar-expand-lg px-3 py-2 custom-navbar shadow-sm">
+             <div className="container-fluid">
+               <Link to="/" className="navbar-brand d-flex align-items-center">
+                 <img
+                   src={process.env.PUBLIC_URL + "/logo.png"}
+                   alt="Logo"
+                   height="36"
+                 />
+                 <span className="ms-2 fs-4 fw-semibold brand-text dancing-script">
+                   PathToPages
+                 </span>
+               </Link>
+     
+               <button
+                 className="navbar-toggler"
+                 type="button"
+                 onClick={() => setIsMenuOpen(!isMenuOpen)}
+               >
+                 <span className="navbar-toggler-icon"></span>
+               </button>
+     
+               <div
+                 className={`collapse navbar-collapse ${isMenuOpen ? "show" : ""}`}
+               >
+                 <ul className="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
+                   <li className="nav-item">
+                     <Link to="/" className="nav-link nav-link-custom px-3">
+                       Home
+                     </Link>
+                   </li>
+     
+                   <li className="nav-item">
+                     <Link to="/shop" className="nav-link nav-link-custom px-3">
+                       Shop
+                     </Link>
+                   </li>
+     
+                   <li className="nav-item">
+                     <Link to="/cart" className="nav-link nav-link-custom px-3">
+                       Cart
+                     </Link>
+                   </li>
+     
+                   <li className="nav-item">
+                     <Link to="/profile" className="nav-link nav-link-custom px-3">
+                       Profile
+                     </Link>
+                   </li>
+                 </ul>
+               </div>
+             </div>
+           </nav>
 
-          <button
-            className="navbar-toggler"
-            type="button"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            aria-label="Toggle navigation"
-          >
-            <span className="navbar-toggler-icon"></span>
-          </button>
-
-          <div
-            className={`collapse navbar-collapse ${isMenuOpen ? "show" : ""}`}
-          >
-            <ul className="navbar-nav ms-auto mb-2 mb-lg-0 text-white">
-              <li className="nav-item">
-                <Link to="/" className="nav-link text-white">
-                  Home
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link to="/shop" className="nav-link text-white">
-                  Shop
-                </Link>
-              </li>
-
-              <li className="nav-item">
-                <Link to="/profile" className="nav-link text-white">
-                  Profile
-                </Link>
-              </li>
-              <li className="nav-item d-flex align-items-center ms-3">
-                <span className="badge bg-light text-dark">
-                  Cart: {cartItemCount}
-                </span>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </nav>
-
+      {/* Main – bookmark products */}
       <main
         className="main-content"
         style={{ paddingTop: "80px", paddingBottom: "16px" }}
       >
-        {renderContent()}
+        <div className="container py-5">
+          <div className="row">
+            {BOOKMARK_PRODUCTS.map((product) => (
+              <BookmarkCard
+                key={product.id}
+                product={product}
+                onAddToCart={handleAddToCart}
+                addingId={addingId}
+              />
+            ))}
+          </div>
+        </div>
       </main>
 
-      <footer className="glass-footer d-flex flex-column flex-md-row align-items-center justify-content-between px-4 py-5 text-center text-md-start">
-        <div className="footer-title mb-4 mb-md-0">
-          <h4 className="happy-monkey-regular mb-1">Path To Pages</h4>
-          <span className="happy-monkey-regular small">
-            Designed by Nithish
-          </span>
-        </div>
-
-        <div className="quick-links mb-4 mb-md-0">
-          <h6 className="mb-3">Quick Links</h6>
-          <ul className="list-unstyled d-flex flex-wrap justify-content-center justify-content-md-start gap-3">
-            <li>
-              <Link to="/" className="footer-link">
-                Home
-              </Link>
-            </li>
-            <li>
-              <Link to="/shop" className="footer-link">
-                Shop
-              </Link>
-            </li>
-            <li>
-              <Link to="/profile" className="footer-link">
-                Profile
-              </Link>
-            </li>
-          </ul>
-        </div>
-
-        <div className="social-icons d-flex justify-content-center">
-          <a
-            href="https://wa.me/918019418800"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <FaWhatsapp />
-          </a>
-          <a
-            href="https://www.instagram.com/pathtopages"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <FaInstagram />
-          </a>
-          <a
-            href="https://www.threads.net/pathtopages"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <SiThreads />
-          </a>
-        </div>
-      </footer>
+      {/* Footer */}
+        <footer className="custom-footer py-4 mt-62">
+             <div className="footer-left">
+               <h5 className="footer-title dancing-script mb-1">Path To Pages</h5>
+               {/* <p className="footer-subtext small mb-0">
+                 Designed with passion by Nithish
+               </p> */}
+             </div>
+     
+             <div className="footer-center">
+               <a href="https://wa.me/918019418800" className="footer-icon">
+                 <FaWhatsapp size={22} />
+               </a>
+               <a
+                 href="https://www.instagram.com/pathtopages"
+                 className="footer-icon"
+               >
+                 <FaInstagram size={22} />
+               </a>
+               <a href="https://www.threads.net/pathtopages" className="footer-icon">
+                 <SiThreads size={22} />
+               </a>
+             </div>
+     
+             <div className="footer-right">
+               <p className="small footer-copy mb-0">
+                 © {new Date().getFullYear()} PathToPages
+               </p>
+             </div>
+           </footer>
     </div>
   );
 };
